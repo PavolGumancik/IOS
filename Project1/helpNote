@@ -1,0 +1,27 @@
+file=$1
+for file in *;            ##find all directorys and files for file in *; ##for file in *;
+do
+  if [[ -d "$file" && ! -L "$file" ]]; then  ##check if its directory, ignore
+    #echo "DIRECTORY $file"
+    tmp=$1"/"$file
+    cntDir=$((cntDir+1))
+    echo $tmp
+    #crossWalk $tmp
+  else                  ##it's file
+    #echo "FILE $file"
+    cntFile=$((cntFile+1))
+  fi
+done
+
+
+
+shopt -s globstar
+for file in **/*              #Search in deep
+do
+  if [ -d "$file" ];then      #Directory has been found
+    ((cntDir++))
+  elif [ -f "$file" ];then    #File has been found
+    ((cntFile++))
+    size $file "${vals[@]}"
+  fi
+done

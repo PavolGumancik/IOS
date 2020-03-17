@@ -1,0 +1,124 @@
+#!/bin/bash
+
+# VUT FIT IPP 2018/2019 project.
+#
+# Parser of IPPcode19 source code.
+#
+# @author Pavol Gumancik <xguman01@stud.fit.vutbr.cz>
+
+POSIXLY_CORRECT=yes
+
+###  Check if are validity of arguments ###
+checkArgs()
+{
+  for i in "$@"
+  do
+    echo $i
+  done
+}
+
+### Set length of histogram ###
+normalize()
+{
+  if [ $norm ]; then
+    echo "ide"
+  fi
+}
+
+### Find size of each file ###
+size()
+{
+  size=$(($(wc -c < "$1")+0))   # get size in byts
+
+  if [ $size -lt 100 ]; then      # <100 B
+    (( vals[0]++ ))
+  elif [ $size -lt 1024 ]; then   # <1 KiB
+    (( vals[1]++ ))
+  elif [ $size -lt 10240 ]; then  # <10 KiB
+    (( vals[2]++ ))
+  elif [ $size -lt 102400 ]; then  #  <100 KiB
+    (( vals[3]++ ))
+  elif [ $size -lt 1048576 ]; then  # <1 MiB
+    (( vals[4]++ ))
+  elif [ $size -lt 10485760 ]; then  #  <10 MiB
+    (( vals[5]++ ))
+  elif [ $size -lt 104857600 ]; then  # <100 MiB
+    (( vals[6]++ ))
+  elif [ $size -lt 1073741824 ]; then  #  <1 GiB
+    (( vals[7]++ ))
+  else                    #>=1 GiB
+    (( vals[8]++ ))
+  fi
+}
+
+### Loop trought directorys and count them ###
+crossWalk()
+{
+  shopt -s globstar
+  for file in **/*              #Search in deep
+  do
+    if [ -d "$file" ];then      #Directory has been found
+      ((cntDir++))
+    elif [ -f "$file" ];then    #File has been found
+      ((cntFile++))
+      size $file "${vals[@]}"
+    fi
+  done
+}
+
+### Print histogram
+histogram()
+{
+  for (( i = 0; i < $1; i++ )); do
+    echo -n "#"
+  done
+}
+### Print base for histogram ###
+base()
+{
+  echo -n "  <100 B  : "
+    histogram "${vals[0]}"
+    echo -e
+  echo -n "  <1 KiB  : "
+    histogram "${vals[1]}"
+    echo -e
+  echo -n "  <10 KiB : "
+    histogram "${vals[2]}"
+    echo -e
+  echo -n "  <100 KiB: "
+    histogram "${vals[3]}"
+    echo -e
+  echo -n "  <1 MiB  : "
+    histogram "${vals[4]}"
+    echo -e
+  echo -n "  <10 MiB : "
+    histogram "${vals[5]}"
+    echo -e
+  echo -n "  <100 MiB: "
+    histogram "${vals[6]}"
+    echo -e
+  echo -n "  <1 GiB  : "
+    histogram "${vals[7]}"
+    echo -e
+  echo -n "  >=1 GiB : "
+    histogram "${vals[8]}"
+    echo -e
+}
+
+######################################################
+##                      MAIN                        ##
+######################################################
+Rdir=$PWD
+cntDir=0   #dir=$((dir+1))
+cntFile=0
+
+vals=(0 0 0 0 0 0 0 0 0)      # Set array for file size counters
+crossWalk $Rdir "${vals[@]}"
+
+echo "Root directory: $Rdir"
+echo "Directories: $cntDir"
+echo "All files: $cntFile"
+echo "File size histogram:"
+
+normalize $norm "${vals[@]}" #normalize structure
+base "${vals[@]}"
