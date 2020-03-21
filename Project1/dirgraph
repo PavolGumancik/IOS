@@ -64,14 +64,15 @@ size()
 ### Loop trought directorys and count them ###
 crossWalk()
 {
-file=$1
-  for file in *;              #Search in deep
+  for file in $1/* ;              #Search in deep
   do
+    echo "$file"
     if [ -d "$file" ];then      #Directory has been found
       cntDir=$((cntDir+1))
-      echo $file
+      crossWalk $file
     elif [ -f "$file" ];then    #File has been found
       cntFile=$((cntFile+1))
+
       size $file
     fi
   done
@@ -122,7 +123,7 @@ base()
 ######################################################
 ##                      MAIN                        ##
 ######################################################
-Rdir=$PWD
+Rdir="/home/pavol/github/IOS/Project1" #$PWD
 cntDir=0   #dir=$((dir+1))
 cntFile=0
 
@@ -134,4 +135,4 @@ echo "All files: $cntFile"
 echo "File size histogram:"
 
 normalize $norm #normalize structure
-base #"${vals[@]}"
+base            #print histogram
