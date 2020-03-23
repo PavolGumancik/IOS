@@ -2,7 +2,7 @@
 
 # VUT FIT IPP 2018/2019 project.
 #
-# Parser of IPPcode19 source code.
+# IOS shell source code.
 #
 # @author Pavol Gumancik <xguman01@stud.fit.vutbr.cz>
 
@@ -18,12 +18,76 @@ export val6=0
 export val7=0
 export val8=0
 
+export Rdir=$PWD    # Path to file/file
+export norm=false   # Variable for normalize output for terminal
+export ignore=false
+
+### Dividing diagram  ###
+div(){
+  val0=$(( val0/2 ))
+  val1=$(( val1/2 ))
+  val2=$(( val2/2 ))
+  val3=$(( val3/2 ))
+  val4=$(( val4/2 ))
+  val5=$(( val5/2 ))
+  val6=$(( val6/2 ))
+  val7=$(( val7/2 ))
+  val8=$(( val8/2 ))
+}
+
+### Recursive set of Histogram Width  ###
+cutGr()
+{
+  if [ $val0 -gt $1 ]; then
+    div
+    cutGr $1
+  elif [ $val1 -gt $1 ]; then
+    div
+    cutGr $1
+  elif [ $val2 -gt $1 ]; then
+    div
+    cutGr $1
+  elif [ $val3 -gt $1 ]; then
+    div
+    cutGr $1
+  elif [ $val4 -gt $1 ]; then
+    div
+    cutGr $1
+  elif [ $val5 -gt $1 ]; then
+    div
+    cutGr $1
+  elif [ $val6 -gt $1 ]; then
+    div
+    cutGr $1
+  elif [ $val7 -gt $1 ]; then
+    div
+    cutGr $1
+  elif [ $val8 -gt $1 ]; then
+    div
+    cutGr $1
+  else
+    return
+  fi
+}
+
 ###  Check if are validity of arguments ###
 checkArgs()
 {
   for i in "$@"
   do
-    echo $i
+    if [ $ignore = "true" ]; then
+      ignore=false  # Discard ignore state
+    elif [ $i = "-n" ]; then
+      norm=true   # Set normalize state
+    elif [ $i = "-i" ]; then
+      ignore=true # Set ignore state in next step
+    else
+      if [ -d "$i" ];then
+        Rdir=$(realpath $i)
+      else        # Argument is not parameter or directory
+        echo "Invalid argument: $i." 1>&2
+      fi
+    fi
   done
 }
 
@@ -31,7 +95,14 @@ checkArgs()
 normalize()
 {
   if [ $norm ]; then
-    echo "ide"
+    if [ -t 1 ] ; then      # Check activity of terminal
+      width=$(tput cols)    # Find width of terminal
+      width=$(( width-13 )) # Width - (base+1)
+      cutGr $width
+    else
+      width=66              # Standard Width (79-13)
+      cutGr $width
+    fi
   fi
 }
 
@@ -66,14 +137,13 @@ crossWalk()
 {
   for file in $1/* ;              #Search in deep
   do
-    echo "$file"
     if [ -d "$file" ];then      #Directory has been found
       cntDir=$((cntDir+1))
       crossWalk $file
     elif [ -f "$file" ];then    #File has been found
       cntFile=$((cntFile+1))
 
-      size $file
+    size $file
     fi
   done
 }
@@ -123,10 +193,11 @@ base()
 ######################################################
 ##                      MAIN                        ##
 ######################################################
-Rdir="/home/pavol/github/IOS/Project1" #$PWD
+
 cntDir=0   #dir=$((dir+1))
 cntFile=0
 
+checkArgs "$@"
 crossWalk $Rdir
 
 echo "Root directory: $Rdir"
