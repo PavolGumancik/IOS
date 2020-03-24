@@ -21,6 +21,7 @@ export val8=0
 export Rdir=$PWD    # Path to file/file
 export norm=false   # Variable for normalize output for terminal
 export ignore=false
+export ignoreList=""
 
 ### Dividing diagram  ###
 div(){
@@ -76,15 +77,20 @@ checkArgs()
   for i in "$@"
   do
     if [ $ignore = "true" ]; then
-      ignore=false  # Discard ignore state
+      ignore=false                  # Discard ignore state
+      ignoreList=$ignoreList" "$i   # Put dir name in ignore list
+
     elif [ $i = "-n" ]; then
-      norm=true   # Set normalize state
+      norm=true                     # Set normalize state
+
     elif [ $i = "-i" ]; then
-      ignore=true # Set ignore state in next step
+      ignore=true                   # Set ignore state in next step
+
     else
       if [ -d "$i" ];then
-        Rdir=$(realpath $i)
-      else        # Argument is not parameter or directory
+        Rdir=$(realpath $i)         # Find path to given directory
+
+      else                          # Argument is not parameter or directory
         echo "Invalid argument: $i." 1>&2
       fi
     fi
@@ -109,25 +115,25 @@ normalize()
 ### Find size of each file ###
 size()
 {
-  size=$(($(wc -c < "$1")+0))   # get size in byts
+  size=$(($(wc -c < "$1")+0))           # get size in byts
 
-  if [ $size -lt 100 ]; then      # <100 B
+  if [ $size -lt 100 ]; then            # <100 B
     val0=$(( val0+1 ))
-  elif [ $size -lt 1024 ]; then   # <1 KiB
+  elif [ $size -lt 1024 ]; then         # <1 KiB
     val1=$(( val1+1 ))
-  elif [ $size -lt 10240 ]; then  # <10 KiB
+  elif [ $size -lt 10240 ]; then        # <10 KiB
     val2=$(( val2+1 ))
-  elif [ $size -lt 102400 ]; then  #  <100 KiB
+  elif [ $size -lt 102400 ]; then       #  <100 KiB
     val3=$(( val3+1 ))
-  elif [ $size -lt 1048576 ]; then  # <1 MiB
+  elif [ $size -lt 1048576 ]; then      # <1 MiB
     val4=$(( val4+1 ))
-  elif [ $size -lt 10485760 ]; then  #  <10 MiB
+  elif [ $size -lt 10485760 ]; then     #  <10 MiB
     val5=$(( val5+1 ))
-  elif [ $size -lt 104857600 ]; then  # <100 MiB
+  elif [ $size -lt 104857600 ]; then    # <100 MiB
     val6=$(( val6+1 ))
-  elif [ $size -lt 1073741824 ]; then  #  <1 GiB
+  elif [ $size -lt 1073741824 ]; then   #  <1 GiB
     val7=$(( val7+1 ))
-  else                    #>=1 GiB
+  else                                  #>=1 GiB
     val8=$(( val8+1 ))
   fi
 }
@@ -135,15 +141,22 @@ size()
 ### Loop trought directorys and count them ###
 crossWalk()
 {
-  for file in $1/* ;              #Search in deep
+  for file in $1/* ;                # Search in deep
   do
-    if [ -d "$file" ];then      #Directory has been found
+    if [ -d "$file" ];then          # Directory has been found
       cntDir=$((cntDir+1))
+
+      for iDir in $ignoreList; do   # Ceck if is directory in ignore list
+        if [ $iDir = $file ]; then
+          continue
+        fi
+      done
       crossWalk $file
-    elif [ -f "$file" ];then    #File has been found
+
+    elif [ -f "$file" ];then        # File has been found
       cntFile=$((cntFile+1))
 
-    size $file
+    size $file                      # Set file sise
     fi
   done
 }
@@ -200,6 +213,7 @@ cntFile=0
 checkArgs "$@"
 crossWalk $Rdir
 
+# Print skelet of output
 echo "Root directory: $Rdir"
 echo "Directories: $cntDir"
 echo "All files: $cntFile"
