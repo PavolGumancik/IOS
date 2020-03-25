@@ -25,3 +25,74 @@ do
     size $file "${vals[@]}"
   fi
 done
+
+for iDir in $ignoreList; do   # Ceck if is directory in ignore list
+  #echo "IG $iDir   DR $file"
+  if test "${file#*$iDir}" != "$file"
+  then
+    continue
+  fi
+done
+
+
+
+for file in $1/* ;                # Search in deep
+do
+    if [ -d "$file" ];then          # Directory has been found
+      for iDir in $ignoreList; do   # Ceck if is directory in ignore list
+        #echo "IG $iDir   DR $file"
+        if test "${file#*$iDir}" != "$file"
+        then
+          continue
+        else
+          crossWalk $file
+        fi
+      done
+      cntDir=$((cntDir+1))
+      #crossWalk $file
+
+    elif [ -f "$file" ];then        # File has been found
+      cntFile=$((cntFile+1))
+
+    size $file                      # Set file sise
+    fi
+done
+
+
+
+crossWalk()
+{
+  for file in $1/* ;                # Search in deep
+  do
+    skip=false
+    for iDir in $ignoreList; do
+      if test "${file#*/$iDir}" != "$file" || test "${file#*/$iDir/*}" != "$file"
+        then
+        skip=true    # Contains substr
+        echo "IG $iDir    SK $file"
+      fi
+    done
+
+    if [ $skip = "true" ]; then
+      continue
+    fi
+
+echo $file
+
+    if [ -d "$file" ];then          # Directory has been found
+      cntDir=$((cntDir+1))
+
+      for iDir in $ignoreList; do   # Ceck if is directory in ignore list
+        if [ $iDir = $file ]; then
+          continue
+        fi
+        #echo $file
+      done
+      crossWalk $file
+
+    elif [ -f "$file" ];then        # File has been found
+      cntFile=$((cntFile+1))
+    size $file                      # Set file sise
+    fi
+  done
+}

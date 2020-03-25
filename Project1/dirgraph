@@ -23,6 +23,21 @@ export norm=false   # Variable for normalize output for terminal
 export ignore=false
 export ignoreList=""
 
+### Ignore ###
+ignoreFunc()
+{
+  file=$1
+  echo "IDE"
+  for iDir in $ignoreList; do
+    if test "${file#*$iDir}" != "$file"
+    then
+      return 1    # Contains substr
+    fi
+  done
+
+  return 0        # Does not contain substr
+}
+
 ### Dividing diagram  ###
 div(){
   val0=$(( val0/2 ))
@@ -78,7 +93,7 @@ checkArgs()
   do
     if [ $ignore = "true" ]; then
       ignore=false                  # Discard ignore state
-      ignoreList=$ignoreList" "$i   # Put dir name in ignore list
+      ignoreList=$ignoreList" "$i   # Put name in ignore list
 
     elif [ $i = "-n" ]; then
       norm=true                     # Set normalize state
@@ -143,19 +158,29 @@ crossWalk()
 {
   for file in $1/* ;                # Search in deep
   do
+    skip=false
+    path=$(printf '%s' "$file" | tr '/' ' ')  # Make "list" of dirs from path
+
+    for iDir in $ignoreList; do     # Loop ignore list
+      for pDir in $path; do         # Loop path dirs
+        if test  "$iDir" =  $pDir   # Check is directory ignored
+          then
+          skip=true                 # Contains substr
+        fi
+      done
+    done
+
+    if [ $skip = "true" ]; then
+      continue
+    fi
+
     if [ -d "$file" ];then          # Directory has been found
       cntDir=$((cntDir+1))
 
-      for iDir in $ignoreList; do   # Ceck if is directory in ignore list
-        if [ $iDir = $file ]; then
-          continue
-        fi
-      done
       crossWalk $file
 
     elif [ -f "$file" ];then        # File has been found
       cntFile=$((cntFile+1))
-
     size $file                      # Set file sise
     fi
   done
