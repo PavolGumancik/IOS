@@ -26,16 +26,18 @@ export ignoreList=""
 ### Ignore ###
 ignoreFunc()
 {
-  file=$1
-  echo "IDE"
-  for iDir in $ignoreList; do
-    if test "${file#*$iDir}" != "$file"
-    then
-      return 1    # Contains substr
-    fi
+  path=$(printf '%s' "$1" | tr '/' ' ')
+  for iDir in $ignoreList; do     # Loop ignore list
+    for pDir in $path; do         # Loop path dirs
+      if test  "$iDir" =  "$pDir"   # Check if is root directory ignored
+        then
+        echo "Root directory is included set as ignored!" >&2
+        exit 1
+      fi
+    done
   done
 
-  return 0        # Does not contain substr
+  return 1        # Does not contain substr
 }
 
 ### Dividing diagram  ###
@@ -107,6 +109,7 @@ checkArgs()
 
       else                          # Argument is not parameter or directory
         echo "Invalid argument: $i." 1>&2
+        exit 1
       fi
     fi
   done
@@ -163,7 +166,7 @@ crossWalk()
 
     for iDir in $ignoreList; do     # Loop ignore list
       for pDir in $path; do         # Loop path dirs
-        if test  "$iDir" =  $pDir   # Check is directory ignored
+        if test  "$iDir" =  $pDir || test "${pDir#$iDir.*}" != "$pDir"  # Check is directory/file ignored
           then
           skip=true                 # Contains substr
         fi
@@ -174,9 +177,8 @@ crossWalk()
       continue
     fi
 
-    if [ -d "$file" ];then          # Directory has been found
+    if test -d "$file" -a ! -L tmpdir;then          # Directory has been found, not Symlinks
       cntDir=$((cntDir+1))
-
       crossWalk $file
 
     elif [ -f "$file" ];then        # File has been found
@@ -236,7 +238,9 @@ cntDir=0   #dir=$((dir+1))
 cntFile=0
 
 checkArgs "$@"
+ignoreFunc $Rdir
 crossWalk $Rdir
+
 
 # Print skelet of output
 echo "Root directory: $Rdir"
