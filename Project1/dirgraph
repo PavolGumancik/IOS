@@ -23,12 +23,12 @@ export norm=false   # Variable for normalize output for terminal
 export ignore=false
 export ignoreList=""
 
-### Ignore ###
+### Ignore root directory ###
 ignoreFunc()
 {
   path=$(printf '%s' "$1" | tr '/' ' ')
-  for iDir in $ignoreList; do     # Loop ignore list
-    for pDir in $path; do         # Loop path dirs
+  for iDir in $ignoreList; do       # Loop ignore list
+    for pDir in $path; do           # Loop path dirs
       if test  "$iDir" =  "$pDir"   # Check if is root directory ignored
         then
         echo "Root directory is included set as ignored!" >&2
@@ -37,7 +37,7 @@ ignoreFunc()
     done
   done
 
-  return 1        # Does not contain substr
+  return 1                          # Does not contain substr
 }
 
 ### Dividing diagram  ###
@@ -177,13 +177,13 @@ crossWalk()
       continue
     fi
 
-    if test -d "$file" -a ! -L tmpdir;then          # Directory has been found, not Symlinks
+    if test -d "$file" -a ! -L tmpdir;then  # Directory has been found, not Symlinks
       cntDir=$((cntDir+1))
       crossWalk $file
 
-    elif [ -f "$file" ];then        # File has been found
+    elif [ -f "$file" ];then                # File has been found
       cntFile=$((cntFile+1))
-    size $file                      # Set file sise
+    size $file                              # Set file sise
     fi
   done
 }
